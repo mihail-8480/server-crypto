@@ -275,17 +275,65 @@ export class CurrentServer extends Server {
   }
 }
 
+function lazy<T extends {}>(fn: () => T): T {
+  let value: T | undefined = undefined;
+  let initialized = false;
+
+  const handler: ProxyHandler<T> = {
+    get(_, prop, receiver) {
+      if (!initialized) {
+        value = fn();
+        initialized = true;
+      }
+      return Reflect.get(value as T, prop, receiver);
+    },
+    set(_, prop, newValue, receiver) {
+      if (!initialized) {
+        value = fn();
+        initialized = true;
+      }
+      return Reflect.set(value as T, prop, newValue, receiver);
+    },
+    has(_, prop) {
+      if (!initialized) {
+        value = fn();
+        initialized = true;
+      }
+      return prop in (value as T);
+    },
+    ownKeys(_) {
+      if (!initialized) {
+        value = fn();
+        initialized = true;
+      }
+      return Reflect.ownKeys(value as T);
+    },
+    getOwnPropertyDescriptor(_, prop) {
+      if (!initialized) {
+        value = fn();
+        initialized = true;
+      }
+      return Reflect.getOwnPropertyDescriptor(value as T, prop);
+    },
+  };
+
+  return new Proxy<T>({} as T, handler);
+}
+
 export class ServerManager {
-  public static readonly default = new ServerManager(
-    CurrentServer.fromEnvironment(),
-    RemoteServer.fromEnvironment()
+  public static readonly default = lazy(
+    () =>
+      new ServerManager(
+        CurrentServer.fromEnvironment(),
+        RemoteServer.fromEnvironment()
+      )
   );
 
-  #currentServer: CurrentServer;
-  #servers: Map<string, RemoteServer>;
+  private _currentServer: CurrentServer;
+  private _servers: Map<string, RemoteServer>;
   constructor(currentServer: CurrentServer, remotes: Iterable<RemoteServer>) {
-    this.#currentServer = currentServer;
-    this.#servers = new Map<string, RemoteServer>(
+    this._currentServer = currentServer;
+    this._servers = new Map<string, RemoteServer>(
       [...remotes].map(
         (remote) =>
           [remote.name.toLocaleLowerCase(), remote] as [string, RemoteServer]
@@ -294,7 +342,7 @@ export class ServerManager {
   }
 
   get self(): CurrentServer {
-    return this.#currentServer;
+    return this._currentServer;
   }
 
   *publicKeys(): Iterable<
@@ -312,7 +360,7 @@ export class ServerManager {
         "application/jwk+json": this.self.publicKey.export({ format: "jwk" }),
       },
     ];
-    for (const [name, server] of this.#servers) {
+    for (const [name, server] of this._servers) {
       yield [
         name,
         {
@@ -327,9 +375,9 @@ export class ServerManager {
 
   get(name: string): Server | undefined {
     const lowercaseName = name.toLocaleLowerCase();
-    if (lowercaseName === this.#currentServer.name.toLocaleLowerCase()) {
-      return this.#currentServer;
+    if (lowercaseName === this._currentServer.name.toLocaleLowerCase()) {
+      return this._currentServer;
     }
-    return this.#servers.get(lowercaseName);
+    return this._servers.get(lowercaseName);
   }
 }
