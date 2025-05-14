@@ -1,6 +1,6 @@
 {
   "name": "@mojsoski/server-crypto",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Asymmetric key-exchange cryptography library",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -13,11 +13,6 @@
   "author": "Mihail Mojsoski",
   "license": "MIT",
   "type": "commonjs",
-  "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^22.15.17",
-    "typescript": "^5.8.3"
-  },
   "scripts": {
     "watch": "npx tsc --watch",
     "build": "npx tsc",
@@ -29,9 +24,17 @@
   "publishConfig": {
     "access": "public"
   },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.3"
+  },
   "dependencies": {
     "@mojsoski/assert": "^1.0.0",
-    "@mojsoski/async-stream": "^1.0.0",
-    "jsonwebtoken": "^9.0.2"
+    "@mojsoski/async-stream": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "jose": "^6.0.11"
   }
 }
