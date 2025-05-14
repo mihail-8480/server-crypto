@@ -7,6 +7,11 @@ export class ServerManager<TKey> {
   private _currentServer: CurrentServer<TKey>;
   private _servers: Map<string, RemoteServer<TKey>>;
   private _provider: ICryptoProvider<TKey>;
+
+  get provider() {
+    return this._provider;
+  }
+
   constructor(
     currentServer: CurrentServer<TKey>,
     remotes: Iterable<RemoteServer<TKey>>,
