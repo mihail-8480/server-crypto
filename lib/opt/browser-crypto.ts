@@ -23,7 +23,18 @@ function cryptoFrom(): ICryptoProvider<CryptoKey>["crypto"] {
     },
 
     async jwkPublicKey(key: CryptoKey): Promise<object> {
-      return await crypto.subtle.exportKey("jwk", key);
+      const verifyKey = await crypto.subtle.importKey(
+        "spki",
+        await crypto.subtle.exportKey("spki", key),
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256",
+        },
+        true,
+        ["verify"]
+      );
+
+      return await crypto.subtle.exportKey("jwk", verifyKey);
     },
 
     async parsePrivateKey(base64url: string): Promise<CryptoKey> {
